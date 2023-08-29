@@ -1,6 +1,6 @@
 import sqlite3
 
-bd = sqlite3.connect('stocks.db') # подключение к бд
+bd = sqlite3.connect('../volume_analyze/Standard deviation and Z-score/stocks.db') # подключение к бд
 cur = bd.cursor()
 
 

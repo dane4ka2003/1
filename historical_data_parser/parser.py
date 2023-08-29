@@ -16,6 +16,8 @@ def get_candels(figi: str, file_name: str):# str, str -> .txt
     :param figi: figi-номер акции по которой необходимо получение данных
     :param file_name: название файла .txt в который необходимо записать данные
     :return: file_name.txt
+    
+    !!!ВАЖНО: в свече указано время по часовому поясу UTC+00.00
     '''
     result = open(f'{file_name}.txt', 'w+')
     with Client(TOKEN) as client:
