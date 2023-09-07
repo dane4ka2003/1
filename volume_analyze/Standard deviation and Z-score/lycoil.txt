@@ -1,0 +1,1 @@
+(False, 2.750782165087958)  HistoricCandle(open=Quotation(units=6742, nano=0), high=Quotation(units=6760, nano=0), low=Quotation(units=6741, nano=500000000), close=Quotation(units=6754, nano=500000000), volume=10100, time=datetime.datetime(2023, 9, 7, 11, 35, tzinfo=datetime.timezone.utc), is_complete=True)

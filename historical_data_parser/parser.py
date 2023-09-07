@@ -23,11 +23,11 @@ def get_candels(figi: str, file_name: str):# str, str -> .txt
     with Client(TOKEN) as client:
         for candle in client.get_all_candles(
             figi=figi,
-            from_=now() - timedelta(days=60),
-            interval=CandleInterval.CANDLE_INTERVAL_5_MIN,
+            from_=now() - timedelta(days=5),
+            interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
         ):
             result.write(f'{str(candle)}\n')
-            time.sleep(0.1)
+            #time.sleep(0.1)
     result.close()
     return result
 

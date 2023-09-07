@@ -1,6 +1,6 @@
 import sqlite3
 
-bd = sqlite3.connect('../volume_analyze/Standard deviation and Z-score/stocks.db') # подключение к бд
+bd = sqlite3.connect('stocks07_09.db') # подключение к бд
 cur = bd.cursor()
 
 
@@ -29,7 +29,7 @@ def main():# None -> None
     for i in range(len(figis)):
         name = figis[i].split()[0]
         file = open(f'{name}.txt', 'r').readlines()
-
+        print(f'{name} записан!')
 
         for i in range(len(file)):
             cur.execute(f"""  
@@ -45,6 +45,7 @@ def main():# None -> None
             cur.execute(f"""INSERT INTO {name}(open, high, low, close, volume, time) 
                VALUES(?, ?, ?, ?, ?, ?);""", get_data(file, i))
             bd.commit()
+
 
 
 
