@@ -1,53 +1,24 @@
 import sqlite3
+import os
+from dotenv.main import load_dotenv
 
-bd = sqlite3.connect('stocks07_09.db') # подключение к бд
+load_dotenv()
+PATH = os.environ['DB_PATH']
+bd = sqlite3.connect(PATH) # подключение к бд
 cur = bd.cursor()
 
 
 
-def get_data(file:str, i:int):# str, int -> list
-    '''
-    функция для преобразования HistoricalCandle в список со значениями [открытие, верхняя граница, нижняя граница, закрытие, объём, время]
-    :param file: название файла с данными о свечах
-    :param i: порядковый номер HistoricalCandle в файле
-    :return: список со значениями
-    '''
-    candle = file[i]
-    candle = candle.split(',')
-    return [candle[0].split('=')[2], candle[2].split('=')[2], candle[4].split('=')[2], candle[6].split('=')[2],
-            candle[8].split('=')[1], f"{candle[9].split('(')[1].strip()}:{candle[10].strip()}:{candle[11].strip()}:{candle[12].strip()}:{candle[13].strip()}"]
-
-
-
-
-def main():# None -> None
-    '''
-    Функция для записи данных о свечах из текстового файла в базу данных
-    :return: None
-    '''
-    figis = open('figi.txt', 'r', encoding='utf-8').readlines()
-    for i in range(len(figis)):
-        name = figis[i].split()[0]
-        file = open(f'{name}.txt', 'r').readlines()
-        print(f'{name} записан!')
-
-        for i in range(len(file)):
-            cur.execute(f"""  
-                 CREATE TABLE IF NOT EXISTS {name}(
-                 open TEXT,
-                 high TEXT,
-                 low TEXT,
-                 close TEXT,
-                 volume TEXT,
-                 time TEXT);   
-            """)
-
-            cur.execute(f"""INSERT INTO {name}(open, high, low, close, volume, time) 
-               VALUES(?, ?, ?, ?, ?, ?);""", get_data(file, i))
-            bd.commit()
-
-
+def figi_to_bd():
+    f = open('figi.txt', 'r', encoding='utf-8').readlines()
+    for figis in f:
+        figi = figis.split()[0]
+        name = ''
+        for i in range(1, len(figis.split())):
+            name+=figis.split()[i] + ' '
+        cur.execute('INSERT INTO FIGI VALUES(?,?);', (figi, name))
+        bd.commit()
 
 
 if __name__ == '__main__':
-    main()
+    figi_to_bd()

@@ -3,6 +3,7 @@ import os
 from datetime import timedelta
 from tinkoff.invest import Client, CandleInterval
 from tinkoff.invest.utils import now
+from DB.db import DataBase
 
 
 
@@ -69,9 +70,12 @@ class StreamParser(object):
 
                         interval=interval_method,
                 ):
-                    return candle
+                    return {'open': int(candle.open.units), 'high': int(candle.high.units), 'low': int(candle.low.units), 'close': int(candle.close.units), 'volume': int(candle.volume), 'time': str(candle.time)}
         except:
-            return f"GET ERROR: Can't get candle of action with Figi: {self.figi}!"
+            return {'open': None, 'high': None, 'low': None,
+                    'close': None, 'volume': None, 'time': None}
+
+
 
 
 

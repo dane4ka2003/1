@@ -4,51 +4,72 @@ from datetime import timedelta
 import time
 from tinkoff.invest import CandleInterval, Client
 from tinkoff.invest.utils import now
+import sqlite3
 
 
-load_dotenv()
-TOKEN = os.environ['TINKOFF_API_TOKEN'] # токен TinkoffAPI
 
 
-def get_candels(figi: str, file_name: str):# str, str -> .txt
-    f'''
-    функция получения свечей акции интервалом 5 мин за 60 последних дней по figi
-    :param figi: figi-номер акции по которой необходимо получение данных
-    :param file_name: название файла .txt в который необходимо записать данные
-    :return: file_name.txt
-    
-    !!!ВАЖНО: в свече указано время по часовому поясу UTC+00.00
-    '''
-    result = open(f'{file_name}.txt', 'w+')
-    with Client(TOKEN) as client:
-        for candle in client.get_all_candles(
-            figi=figi,
-            from_=now() - timedelta(days=5),
-            interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
-        ):
-            result.write(f'{str(candle)}\n')
-            #time.sleep(0.1)
-    result.close()
-    return result
 
-def main(): # None -> None
-    '''
-    Функция записи данных о свечах (интервал 5 мин, за последние 2 месяца) по акциям из файла figi.txt
-    Выводит:
-        {figi} успешно записан! - при успешной записи данных по инструменту
-        {figi} не записан! - при ошибке
-    :return: None
-    '''
-    figis = open('figi.txt', 'r', encoding='utf-8').readlines()
-    for i in range(len(figis)):
-        try:
-            get_candels(str(figis[i]).split()[0], str(figis[i]).split()[0])
-            print(f'{str(figis[i]).split()[1]} успешно записан!')
-        except:
-            print(f'{str(figis[i]).split()[1]} не записан!')
+class HistoricalDataParser(object):
+
+    def __init__(self, file_name: str, data_base_name: str):
+        load_dotenv()
+        self.TOKEN = os.environ['TINKOFF_API_TOKEN'] # токен TinkoffAPI
+        self.file_name = file_name
+        self.bd = sqlite3.connect(data_base_name)
+        self.cur = self.bd.cursor()
+
+
+
+    def get_candels(self, figi: str):  # str, str -> .txt
+        f'''
+        функция получения свечей акции интервалом 5 мин за 60 последних дней по figi
+        :param figi: figi-номер акции по которой необходимо получение данных
+        :param file_name: название файла .txt в который необходимо записать данные
+        :return: file_name.txt
+
+        !!!ВАЖНО: в свече указано время по часовому поясу UTC+00.00
+        '''
+        self.cur.execute(f"""  
+                 CREATE TABLE IF NOT EXISTS {figi}(
+                 id integer primary key autoincrement,
+                 open TEXT,
+                 high TEXT,
+                 low TEXT,
+                 close TEXT,
+                 volume TEXT,
+                 time TEXT); """)
+        self.bd.commit()
+        with Client(self.TOKEN) as client:
+            for candle in client.get_all_candles(
+                    figi=figi,
+                    from_=now() - timedelta(days=7),
+                    interval=CandleInterval.CANDLE_INTERVAL_1_MIN,
+            ):
+                self.cur.execute(f"""INSERT INTO {figi} (open, high, low, close, volume, time) VALUES (?,?,?,?,?,?)""", (candle.open.units, candle.high.units, candle.low.units, candle.close.units, candle.volume, candle.time))
+                self.bd.commit()
+                # time.sleep(0.1)
+        print(f'{figi} успешно записан!')
+
+
+    def run(self):  # None -> None
+        '''
+        Функция записи данных о свечах (интервал 5 мин, за последние 2 месяца) по акциям из файла figi.txt
+        Выводит:
+            {figi} успешно записан! - при успешной записи данных по инструменту
+            {figi} не записан! - при ошибке
+        :return: None
+        '''
+        f = open(self.file_name, 'r', encoding='utf-8').readlines()
+        for i in range(len(f)):
+            self.get_candels(f[i].split()[0])
+
+
+
 
 if __name__ == '__main__':
-    main()
+    parse = HistoricalDataParser('figi.txt', 'stocks18_09.db')
+    parse.run()
 
 
 
